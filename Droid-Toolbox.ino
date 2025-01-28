@@ -247,12 +247,12 @@
 
 #define MSG_VERSION                         "v0.76"                 // the version displayed on the splash screen at the lower right; β
 
-#ifdef LILYGO_AMOLED
-  #define DEFAULT_TEXT_SIZE                 3
-  #define DEFAULT_TEXT_PADDING              15
+#if defined(ST7735_DRIVER)  // TTGO-TS v1.4 specific settings
+  #define DEFAULT_TEXT_SIZE                 1                       // smaller text size for ST7735 display
+  #define DEFAULT_TEXT_PADDING              5                      // smaller padding for ST7735 display
 #else
-  #define DEFAULT_TEXT_SIZE                 2                       // a generic size used throughout 
-  #define DEFAULT_TEXT_PADDING              10                      // necessary? perhaps just use a formula throughout the code? e.g. (tft.fontHeight() / 3)
+  #define DEFAULT_TEXT_SIZE                 2                       // normal size for larger displays
+  #define DEFAULT_TEXT_PADDING              10                      // normal padding for larger displays
 #endif
 
 #define DEFAULT_TEXT_COLOR                  TFT_DARKGREY            // e.g. 'turn off your droid remote'
@@ -607,17 +607,20 @@ beacon_t beacon;
   #define TDISPLAYS3
 #endif
 
-#define BUTTON1_PIN       0   // button 1 on the TTGO T-Display and T-Display-S3 is GPIO 0
-#if defined(LILYGO_AMOLED)
-  #define BUTTON2_PIN     -1  // button 2 on the LilyGo AMOLED; if you have a version 1 AMOLED basic change this to 21
-  #define BAT_ADC_PIN     4   // battery monitor pin
-#elif defined(TDISPLAYS3)
-  #define BUTTON2_PIN     14  // button 2 on the T-Display-S3 is GPIO14
-  #define BAT_ADC_PIN     4   // battery monitor pin
-#else
-  #define BUTTON2_PIN     35  // button 2 on the TTGO T-Display is GPIO 35
-  #define BAT_ADC_PIN     34  // battery monitor pin
-  //#undef USE_OFR_FONTS        // force T-Display to not use OFR? i don't think this is necessary.
+#ifndef BUTTON1_PIN
+  #if defined(LILYGO_AMOLED)
+    #define BUTTON1_PIN     0
+    #define BUTTON2_PIN    -1  // button 2 on the LilyGo AMOLED; if you have a version 1 AMOLED basic change this to 21
+    #define BAT_ADC_PIN     4  // battery monitor pin
+  #elif defined(TDISPLAYS3)
+    #define BUTTON1_PIN     0
+    #define BUTTON2_PIN    14  // button 2 on the T-Display-S3 is GPIO14
+    #define BAT_ADC_PIN     4  // battery monitor pin
+  #else
+    #define BUTTON1_PIN     0  // button 1 on the TTGO T-Display is GPIO 0
+    #define BUTTON2_PIN    35  // button 2 on the TTGO T-Display is GPIO 35
+    #define BAT_ADC_PIN    34  // battery monitor pin
+  #endif
 #endif
 
 #define LAZY_DEBOUNCE     10  // time to wait after a button press before considering it a good press
@@ -1653,7 +1656,7 @@ bool droid_connect(const char *addr_to_connect) {
     // store this address to NVS
     #ifdef USE_NVS
       SERIAL_PRINTLN("Saving droid BLE address.");
-      preferences.putString("saved_addr", droids[current_droid].pAdvertisedDevice->getAddress().toString());
+      preferences.putString("saved_addr", droids[current_droid].pAdvertisedDevice->getAddress().toString().c_str());
     #endif
   } else {
     SERIAL_PRINT("Manually connecting to ");
